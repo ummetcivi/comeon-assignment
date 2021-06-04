@@ -43,7 +43,7 @@ public class EmailController {
 
     @GetMapping("/{email}")
     public ResponseEntity<Email> getEmail(@PathVariable final String email) {
-        return ResponseEntity.ok(emailService.getBy(email));
+        return ResponseEntity.ok(emailService.get(email));
     }
 
     @DeleteMapping("/{email}")

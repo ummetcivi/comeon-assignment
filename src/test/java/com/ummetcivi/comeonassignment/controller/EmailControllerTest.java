@@ -95,7 +95,7 @@ class EmailControllerTest {
         // Given
         final Email email = Mockito.mock(Email.class);
 
-        Mockito.when(emailService.getBy(TestConstants.ANY_EMAIL)).thenReturn(email);
+        Mockito.when(emailService.get(TestConstants.ANY_EMAIL)).thenReturn(email);
 
         // When
         final ResponseEntity<Email> response = underTest.getEmail(TestConstants.ANY_EMAIL);

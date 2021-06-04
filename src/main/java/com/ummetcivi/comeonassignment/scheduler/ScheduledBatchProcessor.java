@@ -34,7 +34,7 @@ public class ScheduledBatchProcessor {
 
     private final BatchRepository batchRepository;
     private final BatchDatasetRepository batchDatasetRepository;
-    private final EmailRepository processedBatchRepository;
+    private final EmailRepository emailRepository;
     private final RemoteDatasetAccessor remoteDatasetAccessor;
 
     @Value("${email.allowedDomains}")
@@ -82,8 +82,12 @@ public class ScheduledBatchProcessor {
                         .emails(datasetEntity.getEmails())
                         .build())
                 .collect(Collectors.toList());
+
         final List<EmailEntity> emailOccurrences = getAllEmails(batchId, datasetList);
-        processedBatchRepository.saveAll(emailOccurrences);
+
+        if (!CollectionUtils.isEmpty(emailOccurrences)) {
+            emailRepository.saveAll(emailOccurrences);
+        }
     }
 
     private List<EmailEntity> getAllEmails(final String batchId, final List<Dataset> dataset) {

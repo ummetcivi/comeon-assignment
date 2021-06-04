@@ -67,7 +67,7 @@ public class EmailService {
                 .collect(Collectors.toList());
     }
 
-    public Email getBy(String emailAddress) {
+    public Email get(String emailAddress) {
         final List<EmailEntity> emailEntityList = emailRepository
                 .findAllByEmail(emailAddress);
 
@@ -100,7 +100,7 @@ public class EmailService {
                 .email(email)
                 .build());
 
-        return getBy(email);
+        return get(email);
     }
 
     private BatchEntity getCurrentOrCreateBatch() {
