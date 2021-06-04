@@ -10,6 +10,7 @@ import com.ummetcivi.comeonassignment.domain.Batch;
 import com.ummetcivi.comeonassignment.domain.Dataset;
 import com.ummetcivi.comeonassignment.domain.Email;
 import com.ummetcivi.comeonassignment.enums.BatchStatus;
+import com.ummetcivi.comeonassignment.exception.BadRequestException;
 import com.ummetcivi.comeonassignment.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +22,7 @@ import org.springframework.util.StringUtils;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,6 +37,9 @@ public class EmailService {
 
     @Value("${batch.windowInMinutes}")
     private int batchWindowInMinutes;
+
+    @Value("${email.allowedDomains}")
+    private Set<String> allowedDomains;
 
     public Batch importEmails(final Dataset dataset) {
         final BatchEntity currentBatch = getCurrentOrCreateBatch();
@@ -94,6 +99,10 @@ public class EmailService {
     }
 
     public Email create(String email) {
+        if (allowedDomains.stream().noneMatch(email::endsWith)) {
+            throw new BadRequestException("Email domain is not allowed.");
+        }
+
         emailRepository.save(EmailEntity.builder()
                 .id(generateId())
                 .occurrence(1)
