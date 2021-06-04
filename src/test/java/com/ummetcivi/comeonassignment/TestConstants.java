@@ -9,4 +9,6 @@ public class TestConstants {
     public static final String ANY_EMAIL = "anyEmail" + ANY_ALLOWED_DOMAIN;
     public static final String ANY_NOT_ALLOWED_EMAIL = "anyNotEmail";
     public static final String ANY_OTHER_EMAIL = "anyOtherEmail" + ANY_ALLOWED_DOMAIN;
+    public static final long ANY_OCCURRENCE = 5;
+    public static final String ANY_OTHER_URL = "antOtherUrl";
 }

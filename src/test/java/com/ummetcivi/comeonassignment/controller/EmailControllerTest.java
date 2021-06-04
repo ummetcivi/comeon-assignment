@@ -4,6 +4,7 @@ import com.ummetcivi.comeonassignment.TestConstants;
 import com.ummetcivi.comeonassignment.domain.Batch;
 import com.ummetcivi.comeonassignment.domain.Dataset;
 import com.ummetcivi.comeonassignment.domain.Email;
+import com.ummetcivi.comeonassignment.dto.CreateEmailDto;
 import com.ummetcivi.comeonassignment.dto.DatasetDto;
 import com.ummetcivi.comeonassignment.service.EmailService;
 import org.junit.jupiter.api.Assertions;
@@ -103,5 +104,38 @@ class EmailControllerTest {
         // Then
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
         Assertions.assertEquals(email, response.getBody());
+    }
+
+    @Test
+    void shouldCreateEmail() {
+        // Given
+        final CreateEmailDto createEmailDto = Mockito.mock(CreateEmailDto.class);
+        final Email email = Mockito.mock(Email.class);
+
+        Mockito.when(createEmailDto.getEmail()).thenReturn(TestConstants.ANY_EMAIL);
+        Mockito.when(emailService.create(TestConstants.ANY_EMAIL)).thenReturn(email);
+
+        // When
+        final ResponseEntity<Email> response = underTest.create(createEmailDto);
+
+        // Then
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        Assertions.assertEquals(email, response.getBody());
+
+        Mockito.verify(emailService).create(TestConstants.ANY_EMAIL);
+    }
+
+    @Test
+    void shouldDeleteEmail() {
+        // When
+        final ResponseEntity<Void> response = underTest.delete(TestConstants.ANY_EMAIL);
+
+        // Then
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        Assertions.assertNull(response.getBody());
+
+        Mockito.verify(emailService).delete(TestConstants.ANY_EMAIL);
     }
 }
