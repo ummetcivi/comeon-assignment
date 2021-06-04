@@ -3,7 +3,7 @@ package com.ummetcivi.comeonassignment.controller;
 import com.ummetcivi.comeonassignment.TestConstants;
 import com.ummetcivi.comeonassignment.domain.Batch;
 import com.ummetcivi.comeonassignment.domain.Dataset;
-import com.ummetcivi.comeonassignment.domain.EmailOccurrence;
+import com.ummetcivi.comeonassignment.domain.Email;
 import com.ummetcivi.comeonassignment.dto.DatasetDto;
 import com.ummetcivi.comeonassignment.service.EmailService;
 import org.junit.jupiter.api.Assertions;
@@ -58,50 +58,50 @@ class EmailControllerTest {
     @SuppressWarnings("unchecked")
     void shouldGetAllEmails() {
         // Given
-        final List<EmailOccurrence> emailOccurrences = Mockito.mock(List.class);
+        final List<Email> emails = Mockito.mock(List.class);
 
-        Mockito.when(emailService.getAll(null)).thenReturn(emailOccurrences);
+        Mockito.when(emailService.getAll(null)).thenReturn(emails);
 
         // When
-        final ResponseEntity<List<EmailOccurrence>> response = underTest.getAll(null);
+        final ResponseEntity<List<Email>> response = underTest.getAll(null);
 
         // Then
         Mockito.verify(emailService).getAll(null);
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
-        Assertions.assertEquals(emailOccurrences, response.getBody());
+        Assertions.assertEquals(emails, response.getBody());
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void shouldGetEmailsByBatchId() {
         // Given
-        final List<EmailOccurrence> emailOccurrences = Mockito.mock(List.class);
+        final List<Email> emails = Mockito.mock(List.class);
 
-        Mockito.when(emailService.getAll(TestConstants.ANY_BATCH_ID)).thenReturn(emailOccurrences);
+        Mockito.when(emailService.getAll(TestConstants.ANY_BATCH_ID)).thenReturn(emails);
 
         // When
-        final ResponseEntity<List<EmailOccurrence>> response = underTest.getAll(TestConstants.ANY_BATCH_ID);
+        final ResponseEntity<List<Email>> response = underTest.getAll(TestConstants.ANY_BATCH_ID);
 
         // Then
         Mockito.verify(emailService).getAll(TestConstants.ANY_BATCH_ID);
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
-        Assertions.assertEquals(emailOccurrences, response.getBody());
+        Assertions.assertEquals(emails, response.getBody());
     }
 
     @Test
     void shouldGetEmail() {
         // Given
-        final EmailOccurrence emailOccurrence = Mockito.mock(EmailOccurrence.class);
+        final Email email = Mockito.mock(Email.class);
 
-        Mockito.when(emailService.getBy(TestConstants.ANY_EMAIL)).thenReturn(emailOccurrence);
+        Mockito.when(emailService.getBy(TestConstants.ANY_EMAIL)).thenReturn(email);
 
         // When
-        final ResponseEntity<EmailOccurrence> response = underTest.getEmail(TestConstants.ANY_EMAIL);
+        final ResponseEntity<Email> response = underTest.getEmail(TestConstants.ANY_EMAIL);
 
         // Then
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
-        Assertions.assertEquals(emailOccurrence, response.getBody());
+        Assertions.assertEquals(email, response.getBody());
     }
 }

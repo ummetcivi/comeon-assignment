@@ -3,12 +3,11 @@ package com.ummetcivi.comeonassignment.scheduler;
 import com.ummetcivi.comeonassignment.accessor.RemoteDatasetAccessor;
 import com.ummetcivi.comeonassignment.data.entity.BatchEntity;
 import com.ummetcivi.comeonassignment.data.entity.DatasetEntity;
-import com.ummetcivi.comeonassignment.data.entity.ProcessedBatchEntity;
+import com.ummetcivi.comeonassignment.data.entity.EmailEntity;
 import com.ummetcivi.comeonassignment.data.jpa.BatchDatasetRepository;
 import com.ummetcivi.comeonassignment.data.jpa.BatchRepository;
-import com.ummetcivi.comeonassignment.data.jpa.ProcessedBatchRepository;
+import com.ummetcivi.comeonassignment.data.jpa.EmailRepository;
 import com.ummetcivi.comeonassignment.domain.Dataset;
-import com.ummetcivi.comeonassignment.domain.EmailOccurrence;
 import com.ummetcivi.comeonassignment.enums.BatchStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,7 +34,7 @@ public class ScheduledBatchProcessor {
 
     private final BatchRepository batchRepository;
     private final BatchDatasetRepository batchDatasetRepository;
-    private final ProcessedBatchRepository processedBatchRepository;
+    private final EmailRepository processedBatchRepository;
     private final RemoteDatasetAccessor remoteDatasetAccessor;
 
     @Value("${email.allowedDomains}")
@@ -82,16 +82,11 @@ public class ScheduledBatchProcessor {
                         .emails(datasetEntity.getEmails())
                         .build())
                 .collect(Collectors.toList());
-
-        final List<EmailOccurrence> emailOccurrences = getAllEmails(datasetList);
-
-        processedBatchRepository.save(ProcessedBatchEntity.builder()
-                .id(batchId)
-                .emails(emailOccurrences)
-                .build());
+        final List<EmailEntity> emailOccurrences = getAllEmails(batchId, datasetList);
+        processedBatchRepository.saveAll(emailOccurrences);
     }
 
-    private List<EmailOccurrence> getAllEmails(final List<Dataset> dataset) {
+    private List<EmailEntity> getAllEmails(final String batchId, final List<Dataset> dataset) {
         return dataset.stream()
                 .map(this::getEmailsFromDataset)
                 .filter(emails -> !CollectionUtils.isEmpty(emails))
@@ -100,9 +95,11 @@ public class ScheduledBatchProcessor {
                 .filter(email -> allowedDomains.stream().anyMatch(email::endsWith))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
                 .entrySet().stream()
-                .map(occurrenceMap -> EmailOccurrence.builder()
+                .map(occurrenceMap -> EmailEntity.builder()
+                        .batchId(batchId)
                         .email(occurrenceMap.getKey())
                         .occurrence(occurrenceMap.getValue())
+                        .id(UUID.randomUUID().toString())
                         .build())
                 .collect(Collectors.toList());
     }

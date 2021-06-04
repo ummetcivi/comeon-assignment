@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Builder
 @Getter
-public class EmailOccurrence {
+public class Email {
 
     private final String email;
     private final long occurrence;
