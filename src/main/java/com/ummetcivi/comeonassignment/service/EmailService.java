@@ -2,14 +2,15 @@ package com.ummetcivi.comeonassignment.service;
 
 import com.ummetcivi.comeonassignment.data.entity.BatchEntity;
 import com.ummetcivi.comeonassignment.data.entity.DatasetEntity;
-import com.ummetcivi.comeonassignment.data.entity.ProcessedBatchEntity;
+import com.ummetcivi.comeonassignment.data.entity.EmailEntity;
 import com.ummetcivi.comeonassignment.data.jpa.BatchDatasetRepository;
 import com.ummetcivi.comeonassignment.data.jpa.BatchRepository;
-import com.ummetcivi.comeonassignment.data.jpa.ProcessedBatchRepository;
+import com.ummetcivi.comeonassignment.data.jpa.EmailRepository;
 import com.ummetcivi.comeonassignment.domain.Batch;
 import com.ummetcivi.comeonassignment.domain.Dataset;
-import com.ummetcivi.comeonassignment.domain.EmailOccurrence;
+import com.ummetcivi.comeonassignment.domain.Email;
 import com.ummetcivi.comeonassignment.enums.BatchStatus;
+import com.ummetcivi.comeonassignment.exception.BadRequestException;
 import com.ummetcivi.comeonassignment.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,8 +21,8 @@ import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -31,11 +32,14 @@ public class EmailService {
 
     private final BatchRepository batchRepository;
     private final BatchDatasetRepository batchDatasetRepository;
-    private final ProcessedBatchRepository processedBatchRepository;
+    private final EmailRepository emailRepository;
     private final ConversionService conversionService;
 
     @Value("${batch.windowInMinutes}")
     private int batchWindowInMinutes;
+
+    @Value("${email.allowedDomains}")
+    private Set<String> allowedDomains;
 
     public Batch importEmails(final Dataset dataset) {
         final BatchEntity currentBatch = getCurrentOrCreateBatch();
@@ -50,44 +54,62 @@ public class EmailService {
         return conversionService.convert(currentBatch, Batch.class);
     }
 
-    public List<EmailOccurrence> getAll(final String id) {
+    public List<Email> getAll(final String id) {
         if (StringUtils.hasText(id)) {
-            final ProcessedBatchEntity processedBatchEntity = processedBatchRepository.findById(id)
-                    .orElseThrow(() -> new ResourceNotFoundException("Summary not found."));
-            return processedBatchEntity.getEmails();
+            return emailRepository.findAllByBatchId(id).stream()
+                    .map(emailEntity -> conversionService.convert(emailEntity, Email.class))
+                    .collect(Collectors.toList());
         }
 
-        return processedBatchRepository.findAll().stream()
-                .map(ProcessedBatchEntity::getEmails)
-                .flatMap(Collection::stream)
-                .collect(Collectors
-                        .groupingBy(EmailOccurrence::getEmail, Collectors.summingLong(EmailOccurrence::getOccurrence)))
-                .entrySet()
-                .stream()
-                .map(occurrenceEntry -> EmailOccurrence.builder()
+        return emailRepository.findAll().stream()
+                .collect(Collectors.groupingBy(EmailEntity::getEmail,
+                        Collectors.summingLong(EmailEntity::getOccurrence)))
+                .entrySet().stream()
+                .map(occurrenceEntry -> Email.builder()
                         .occurrence(occurrenceEntry.getValue())
                         .email(occurrenceEntry.getKey())
                         .build())
                 .collect(Collectors.toList());
     }
 
-    public EmailOccurrence getBy(String emailAddress) {
-        final List<ProcessedBatchEntity> processedBatchEntities = processedBatchRepository.findAllByEmail(emailAddress);
+    public Email get(String emailAddress) {
+        final List<EmailEntity> emailEntityList = emailRepository
+                .findAllByEmail(emailAddress);
 
-        if(CollectionUtils.isEmpty(processedBatchEntities)){
+        if (CollectionUtils.isEmpty(emailEntityList)) {
             throw new ResourceNotFoundException("Email not found.");
         }
 
-        final long occurrence = processedBatchEntities.stream()
-                .map(ProcessedBatchEntity::getEmails)
-                .flatMap(Collection::stream)
-                .mapToLong(EmailOccurrence::getOccurrence)
+        final long occurrence = emailEntityList.stream()
+                .mapToLong(EmailEntity::getOccurrence)
                 .sum();
 
-        return EmailOccurrence.builder()
+        return Email.builder()
                 .email(emailAddress)
                 .occurrence(occurrence)
                 .build();
+    }
+
+    public void delete(String email) {
+        final List<EmailEntity> emails = emailRepository.findAllByEmail(email);
+
+        if (!CollectionUtils.isEmpty(emails)) {
+            emailRepository.deleteAll(emails);
+        }
+    }
+
+    public Email create(String email) {
+        if (allowedDomains.stream().noneMatch(email::endsWith)) {
+            throw new BadRequestException("Email domain is not allowed.");
+        }
+
+        emailRepository.save(EmailEntity.builder()
+                .id(generateId())
+                .occurrence(1)
+                .email(email)
+                .build());
+
+        return get(email);
     }
 
     private BatchEntity getCurrentOrCreateBatch() {

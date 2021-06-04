@@ -20,7 +20,7 @@ public class RemoteDatasetAccessor {
     private final ConversionService conversionService;
 
     @Retryable(value = Exception.class, backoff = @Backoff(delayExpression = "${accessor.retry.maxDelay:100}"),
-            maxAttemptsExpression = "${accessor.retry.maxRetry:3}", recover = "emptyDataset")
+            maxAttemptsExpression = "${accessor.retry.maxRetry:3}", recover = "fallback")
     public Dataset fetchDataset(final String url) {
         final DatasetDto datasetDto = restTemplate.getForObject(url, DatasetDto.class);
         return conversionService.convert(datasetDto, Dataset.class);

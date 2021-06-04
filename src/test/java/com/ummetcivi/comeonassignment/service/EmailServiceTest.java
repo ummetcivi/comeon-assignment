@@ -5,7 +5,7 @@ import com.ummetcivi.comeonassignment.data.entity.BatchEntity;
 import com.ummetcivi.comeonassignment.data.entity.DatasetEntity;
 import com.ummetcivi.comeonassignment.data.jpa.BatchDatasetRepository;
 import com.ummetcivi.comeonassignment.data.jpa.BatchRepository;
-import com.ummetcivi.comeonassignment.data.jpa.ProcessedBatchRepository;
+import com.ummetcivi.comeonassignment.data.jpa.EmailRepository;
 import com.ummetcivi.comeonassignment.domain.Batch;
 import com.ummetcivi.comeonassignment.domain.Dataset;
 import com.ummetcivi.comeonassignment.enums.BatchStatus;
@@ -31,7 +31,7 @@ class EmailServiceTest {
     @Mock
     private BatchDatasetRepository batchDatasetRepository;
     @Mock
-    private ProcessedBatchRepository processedBatchRepository;
+    private EmailRepository processedBatchRepository;
     @Mock
     private ConversionService conversionService;
 
